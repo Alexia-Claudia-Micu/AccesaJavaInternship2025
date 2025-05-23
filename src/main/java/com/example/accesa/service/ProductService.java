@@ -61,24 +61,32 @@ public class ProductService {
     }
 
     /**
-     * Finds recommended substitute products based on similar category but different brand,
-     * and within 10% of the reference unit price.
+     * Finds recommended substitute products in the same category,
+     * and within 10% (default) of the reference unit price.
      *
      * @param productId the ID of the reference product
      * @return a list of substitute Product entities
      */
-    public List<Product> findSubstitutes(String productId, double marginPercent) {
+    /**
+     * Retrieves all variations of the same product (same name, brand, category)
+     * across all stores/dates, sorted by unit price descending.
+     *
+     * @param productId the ID of the reference product
+     * @return a list of product variants sorted by unit price
+     */
+    public List<Product> findSubstitutes(String productId, double ignoredMargin) {
         List<Product> history = productRepo.findById_ProductIdOrderById_DateAsc(productId);
         if (history.isEmpty()) return List.of();
 
         Product reference = history.get(history.size() - 1);
 
-        BigDecimal marginMultiplier = BigDecimal.valueOf(1 + (marginPercent / 100.0));
-
-        return productRepo.findByCategoryAndBrandNot(reference.getCategory(), reference.getBrand()).stream()
-                .filter(p -> p.getUnitPrice().compareTo(reference.getUnitPrice().multiply(marginMultiplier)) <= 0)
+        return productRepo.findAll().stream()
+                .filter(p -> p.getCategory().equalsIgnoreCase(reference.getCategory()))
+                .filter(p -> p.getBrand().equalsIgnoreCase(reference.getBrand()))
+                .filter(p -> p.getName().equalsIgnoreCase(reference.getName()))
                 .sorted(Comparator.comparing(Product::getUnitPrice))
-                .limit(5)
                 .toList();
     }
+
+
 }
