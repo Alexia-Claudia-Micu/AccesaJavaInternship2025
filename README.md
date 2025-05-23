@@ -12,7 +12,7 @@ A Spring Boot backend application that helps users make smarter grocery shopping
 -  **Top & New Discounts**  
   View highest-percentage and newly added discounts across all stores.
 -  **Smart Substitutes**  
-  Find cost-effective substitutes by unit price within the same category.
+  Find substitutes by unit price.
 
 ## Project Structure
 
@@ -118,10 +118,7 @@ Below is a list of all available endpoints with example requests.
   Full filtering by name, brand, and category.
 
 - `GET /products/{productId}/substitutes`  
-  Get recommended substitutes for a product (default margin = 10%).
-
-- `GET /products/{productId}/substitutes?margin={N}`  
-  Substitute search with custom margin percentage.
+  Get recommended substitutes for a product.
 
 ---
 
