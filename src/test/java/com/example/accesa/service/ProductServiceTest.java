@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,17 +82,27 @@ class ProductServiceTest {
     }
 
     @Test
-    void findSubstitutes_shouldReturnMatchingProducts() {
-        Product reference = createProduct("P001", "Lidl", "BrandA", "Dairy", new BigDecimal("10"), LocalDate.now());
+    void findSubstitutes_shouldReturnAllMatchingVariantsSortedByUnitPrice() {
+        Product reference = createProduct("P001", "Lidl", "BrandA", "Dairy", new BigDecimal("1"), LocalDate.now());
+        reference.setPrice(new BigDecimal("1.99"));
+        reference.setQuantity(new BigDecimal("1"));
+
+        Product variant1 = createProduct("P001", "Kaufland", "BrandA", "Dairy", new BigDecimal("1"), LocalDate.now().minusDays(1));
+        variant1.setPrice(new BigDecimal("1.89"));
+        variant1.setQuantity(new BigDecimal("1"));
+
+        Product variant2 = createProduct("P001", "Profi", "BrandA", "Dairy", new BigDecimal("1"), LocalDate.now().minusDays(2));
+        variant2.setPrice(new BigDecimal("2.09"));
+        variant2.setQuantity(new BigDecimal("1"));
+
         when(productRepo.findById_ProductIdOrderById_DateAsc("P001")).thenReturn(List.of(reference));
+        when(productRepo.findAll()).thenReturn(List.of(reference, variant1, variant2));
 
-        Product substitute = createProduct("P002", "Kaufland", "BrandB", "Dairy", new BigDecimal("10.50"), LocalDate.now());
-        when(productRepo.findByCategoryAndBrandNot("Dairy", "BrandA")).thenReturn(List.of(substitute));
+        List<Product> result = productService.findSubstitutes("P001", 0.0);
 
-        List<Product> result = productService.findSubstitutes("P001", 10.0);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getBrand()).isNotEqualTo("BrandA");
+        assertThat(result).hasSize(3);
+        assertThat(result).isSortedAccordingTo(Comparator.comparing(Product::getUnitPrice));
+        assertThat(result.get(0).getPrice()).isEqualByComparingTo("1.89");
     }
 
     @Test
